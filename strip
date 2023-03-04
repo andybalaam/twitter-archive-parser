@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import re, sys
+
+STATE_BEFORE = 1
+STATE_DURING = 2
+STATE_AFTER = 3
+
+main_start_re = re.compile('^\\s*<main class="container">\\s*$');
+main_end_re = re.compile('^\\s*</main>\\s*$');
+end_tweet_re = re.compile('^(.*)<a href="https://twitter.com/andybalaam/status/(\\d+)"><img src="../../media/tweet.ico" width="12" />&nbsp;(.*)</a></p><hr>$')
+line_re = re.compile("../../media/")
+
+missed_end_tweet_re = re.compile('.*<hr>$')
+
+class Processor:
+    def __init__(self):
+        self.tweet = []
+
+    def line(self, line):
+        m = end_tweet_re.match(line)
+        if m:
+            self.print_tweet(m)
+        else:
+            self.tweet.append(line)
+            m = missed_end_tweet_re.match(line)
+            if m:
+                raise Exception("Missed end: %s" % line)
+
+    def print_tweet(self, m):
+        remaining = m.group(1)
+        id = m.group(2)
+        date = m.group(3)
+        print('<a name="%s"></a>' % id)
+        print(
+            '<a href="#%s">%s</a>'
+            % ( id, date )
+        )
+        for line in self.tweet:
+            print(self.process_line(line))
+        print(self.process_line(remaining + "</p>\n<hr>\n"))
+        self.tweet = []
+
+    def process_line(self, line):
+        return line_re.sub("media/", line)
+
+processor = Processor()
+
+with open(sys.argv[1]) as f:
+    state = STATE_BEFORE
+
+    for line in f:
+        if state == STATE_BEFORE:
+            m = main_start_re.match(line)
+            if m:
+                state = STATE_DURING
+        elif state == STATE_DURING:
+            m = main_end_re.match(line)
+            if m:
+                state = STATE_AFTER
+            else:
+                processor.line(line)
+        elif state == STATE_AFTER:
+            pass
+        else:
+            raise Exception("Bad state %s" % state);
