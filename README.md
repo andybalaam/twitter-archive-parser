@@ -1,3 +1,17 @@
+# Andy's additions
+
+After running the steps below, run:
+
+```bash
+./postprocess
+```
+
+To create a single-page HTML archive of your public tweets.
+
+Modify `postprocess` to change the heading and page title.
+
+I used these hacky scripts to create https://artificialworlds.net/tweets
+
 ## How do I use it?
 1. [Download your Twitter archive](https://twitter.com/settings/download_your_data) (Settings > Your account > Download an archive of your data).
 2. Unzip to a folder.
